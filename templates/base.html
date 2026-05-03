@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TaskFlow{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">TaskFlow</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="{% url 'project_list' %}" class="nav-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+        <span class="icon">📁</span> Projects
+      </a>
+
+      {% if user_projects %}
+      <div class="nav-label">My Projects</div>
+      {% for p in user_projects %}
+      <a href="{% url 'project_detail' p.pk %}" class="nav-item">
+        <span class="icon">·</span> {{ p.name|truncatechars:20 }}
+      </a>
+      {% endfor %}
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ user.username|first|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.username }}</div>
+          <div class="user-role">Member</div>
+        </div>
+      </div>
+      <a href="{% url 'logout' %}" class="nav-item mt-2" style="color: var(--red);">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    {% if messages %}
+      {% for msg in messages %}
+      <div class="alert alert-{% if msg.tags == 'error' %}error{% elif msg.tags == 'success' %}success{% else %}info{% endif %}">
+        {% if msg.tags == 'error' %}⚠️{% elif msg.tags == 'success' %}✅{% else %}ℹ️{% endif %}
+        {{ msg }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

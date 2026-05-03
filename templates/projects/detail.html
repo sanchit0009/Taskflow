@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} — TaskFlow{% endblock %}
+
+{% block content %}
+{% with user_projects='' %}
+
+<div class="breadcrumb">
+  <a href="{% url 'project_list' %}">Projects</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>{{ project.name }}</span>
+</div>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ project.name }}</h1>
+    {% if project.description %}
+    <p class="page-subtitle">{{ project.description }}</p>
+    {% endif %}
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    {% if is_admin %}
+    <a href="{% url 'task_create' project.pk %}" class="btn btn-primary">+ Add Task</a>
+    {% endif %}
+    {% if is_admin %}
+    <a href="{% url 'project_delete' project.pk %}" class="btn btn-danger btn-sm">Delete Project</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Board view -->
+<div class="board" style="margin-bottom:32px;">
+
+  <!-- To Do -->
+  <div class="board-col">
+    <div class="board-col-header">
+      <span class="board-col-title" style="color:#8892a4;">TO DO</span>
+      <span class="board-col-count">{{ todo_tasks.count }}</span>
+    </div>
+    <div class="board-col-body">
+      {% for task in todo_tasks %}
+      <a href="{% url 'task_detail' task.pk %}" style="text-decoration:none;">
+        <div class="task-card">
+          <div class="priority-dot {{ task.priority }}"></div>
+          <div class="task-card-title">{{ task.title }}</div>
+          <div class="task-card-meta">
+            <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+            {% if task.due_date %}
+            <span class="task-card-due {% if task.is_overdue %}overdue{% endif %}">
+              {% if task.is_overdue %}⚠️{% endif %} {{ task.due_date }}
+            </span>
+            {% endif %}
+          </div>
+          {% if task.assigned_to %}
+          <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
+            <div class="avatar" style="width:20px;height:20px;font-size:0.65rem;">{{ task.assigned_to.username|first|upper }}</div>
+            <span class="text-sm text-muted">{{ task.assigned_to.username }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </a>
+      {% empty %}
+      <div class="empty-state" style="padding:24px 0;">
+        <div class="empty-icon" style="font-size:1.5rem;">📝</div>
+        <div class="empty-text">No tasks here</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- In Progress -->
+  <div class="board-col">
+    <div class="board-col-header">
+      <span class="board-col-title" style="color:var(--blue);">IN PROGRESS</span>
+      <span class="board-col-count">{{ in_progress_tasks.count }}</span>
+    </div>
+    <div class="board-col-body">
+      {% for task in in_progress_tasks %}
+      <a href="{% url 'task_detail' task.pk %}" style="text-decoration:none;">
+        <div class="task-card" style="border-left:3px solid var(--blue);">
+          <div class="priority-dot {{ task.priority }}"></div>
+          <div class="task-card-title">{{ task.title }}</div>
+          <div class="task-card-meta">
+            <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+            {% if task.due_date %}
+            <span class="task-card-due {% if task.is_overdue %}overdue{% endif %}">
+              {% if task.is_overdue %}⚠️{% endif %} {{ task.due_date }}
+            </span>
+            {% endif %}
+          </div>
+          {% if task.assigned_to %}
+          <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
+            <div class="avatar" style="width:20px;height:20px;font-size:0.65rem;">{{ task.assigned_to.username|first|upper }}</div>
+            <span class="text-sm text-muted">{{ task.assigned_to.username }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </a>
+      {% empty %}
+      <div class="empty-state" style="padding:24px 0;">
+        <div class="empty-icon" style="font-size:1.5rem;">🔄</div>
+        <div class="empty-text">Nothing in progress</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div class="board-col">
+    <div class="board-col-header">
+      <span class="board-col-title" style="color:var(--green);">DONE</span>
+      <span class="board-col-count">{{ done_tasks.count }}</span>
+    </div>
+    <div class="board-col-body">
+      {% for task in done_tasks %}
+      <a href="{% url 'task_detail' task.pk %}" style="text-decoration:none;">
+        <div class="task-card" style="border-left:3px solid var(--green);opacity:0.75;">
+          <div class="task-card-title" style="text-decoration:line-through;color:var(--text-2);">{{ task.title }}</div>
+          <div class="task-card-meta">
+            {% if task.assigned_to %}
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="avatar" style="width:20px;height:20px;font-size:0.65rem;">{{ task.assigned_to.username|first|upper }}</div>
+              <span class="text-sm text-muted">{{ task.assigned_to.username }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="empty-state" style="padding:24px 0;">
+        <div class="empty-icon" style="font-size:1.5rem;">✅</div>
+        <div class="empty-text">No completed tasks</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Members Section -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="section-header" style="padding:20px 24px;margin:0;">
+      <h3>Team Members</h3>
+      <span class="text-sm text-muted">{{ members.count }} member{{ members.count|pluralize }}</span>
+    </div>
+    <div style="padding:16px;">
+      <div class="member-list">
+        {% for pm in members %}
+        <div class="member-item">
+          <div class="avatar">{{ pm.user.username|first|upper }}</div>
+          <div class="member-info">
+            <div class="member-name">
+              {{ pm.user.get_full_name|default:pm.user.username }}
+              {% if pm.user == project.creator %}<span style="color:var(--text-3);font-size:0.75rem;"> (creator)</span>{% endif %}
+            </div>
+            <div class="member-email">{{ pm.user.email }}</div>
+          </div>
+          <span class="badge badge-{{ pm.role }}">{{ pm.get_role_display }}</span>
+          {% if is_admin and pm.user != request.user %}
+          <form method="post" action="{% url 'remove_member' project.pk pm.user.pk %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Remove this member?')">✕</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Members (Admins Only) -->
+  {% if is_admin %}
+  <div class="card">
+    <h3 style="margin-bottom:16px;">Add Member</h3>
+    {% if all_users %}
+    <form method="post" action="{% url 'add_member' project.pk %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Select User</label>
+        <select name="user_id" class="form-control" required>
+          <option value="">Choose a user...</option>
+          {% for u in all_users %}
+          <option value="{{ u.pk }}">{{ u.username }} {% if u.email %}({{ u.email }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select name="role" class="form-control">
+          <option value="member">Member</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Add to Project</button>
+    </form>
+    {% else %}
+    <div class="empty-state" style="padding:16px 0;">
+      <div class="empty-icon" style="font-size:1.5rem;">👥</div>
+      <div class="empty-text">All registered users are already in this project.</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+{% endwith %}
+{% endblock %}

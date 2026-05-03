@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — TaskFlow{% endblock %}
+
+{% block content %}
+{% load static %}
+{% with user_projects=projects %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">
+      {% if user.first_name %}Good to see you, {{ user.first_name }}!{% else %}Good to see you, {{ user.username }}!{% endif %}
+      Here's your work overview.
+    </p>
+  </div>
+  <a href="{% url 'project_create' %}" class="btn btn-primary">+ New Project</a>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon">📋</div>
+    <div class="stat-value">{{ total_tasks }}</div>
+    <div class="stat-label">Total Tasks</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon">🔵</div>
+    <div class="stat-value">{{ in_progress_tasks }}</div>
+    <div class="stat-label">In Progress</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">✅</div>
+    <div class="stat-value">{{ done_tasks }}</div>
+    <div class="stat-label">Completed</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon">⏰</div>
+    <div class="stat-value">{{ overdue_tasks }}</div>
+    <div class="stat-label">Overdue</div>
+  </div>
+  <div class="stat-card yellow">
+    <div class="stat-icon">📁</div>
+    <div class="stat-value">{{ project_count }}</div>
+    <div class="stat-label">Projects</div>
+  </div>
+</div>
+
+<!-- Two column layout -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+  <!-- Recent Tasks -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="section-header" style="padding:20px 24px;margin:0;border-radius:0;">
+      <h3>Recent Tasks</h3>
+      <span class="text-sm text-muted">Last updated</span>
+    </div>
+    {% if recent_tasks %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for task in recent_tasks %}
+          <tr onclick="window.location='{% url 'task_detail' task.pk %}'" style="cursor:pointer;">
+            <td>
+              <div style="font-weight:500;">{{ task.title|truncatechars:35 }}</div>
+              <div class="text-sm text-muted">{{ task.project.name }}</div>
+            </td>
+            <td><span class="badge badge-{{ task.status }}">{{ task.get_status_display }}</span></td>
+            <td><span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📝</div>
+      <div class="empty-title">No tasks yet</div>
+      <div class="empty-text">Create a project and start adding tasks.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Projects Overview -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="section-header" style="padding:20px 24px;margin:0;border-radius:0;">
+      <h3>My Projects</h3>
+      <a href="{% url 'project_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    {% if projects %}
+    <div style="padding:16px;">
+      {% for project in projects|slice:":5" %}
+      <a href="{% url 'project_detail' project.pk %}" style="display:block;text-decoration:none;">
+        <div style="padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:10px;background:var(--surface-2);transition:var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-weight:600;font-size:0.9rem;color:var(--text);">{{ project.name }}</div>
+            <span class="badge badge-member" style="font-size:0.65rem;">
+              {% if project.creator == user %}admin{% else %}member{% endif %}
+            </span>
+          </div>
+          <div class="text-sm text-muted mt-2">{{ project.tasks.count }} task{{ project.tasks.count|pluralize }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📁</div>
+      <div class="empty-title">No projects yet</div>
+      <a href="{% url 'project_create' %}" class="btn btn-primary btn-sm mt-2">Create Your First Project</a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endwith %}
+{% endblock %}

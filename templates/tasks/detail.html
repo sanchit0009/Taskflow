@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.title }} — TaskFlow{% endblock %}
+
+{% block content %}
+{% with user_projects='' %}
+
+<div class="breadcrumb">
+  <a href="{% url 'project_list' %}">Projects</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="{% url 'project_detail' project.pk %}">{{ project.name }}</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>{{ task.title|truncatechars:30 }}</span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+
+  <!-- Task Main Content -->
+  <div>
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+            <span class="badge badge-{{ task.status }}">{{ task.get_status_display }}</span>
+            <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+            {% if task.is_overdue %}<span class="badge badge-overdue">⚠️ Overdue</span>{% endif %}
+          </div>
+          <h1 style="font-size:1.5rem;">{{ task.title }}</h1>
+        </div>
+        {% if is_admin %}
+        <a href="{% url 'task_delete' task.pk %}" class="btn btn-danger btn-sm">Delete</a>
+        {% endif %}
+      </div>
+
+      {% if task.description %}
+      <p style="color:var(--text-2);line-height:1.8;margin-bottom:20px;">{{ task.description }}</p>
+      <hr class="divider">
+      {% endif %}
+
+      <!-- Edit Form -->
+      {% if can_edit %}
+      <h3 style="margin-bottom:16px;">Update Task</h3>
+      <form method="post" action="{% url 'task_detail' task.pk %}">
+        {% csrf_token %}
+
+        {% if is_admin %}
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="form-control" value="{{ task.title }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control">{{ task.description }}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select name="priority" class="form-control">
+              <option value="low" {% if task.priority == 'low' %}selected{% endif %}>🟢 Low</option>
+              <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>🟡 Medium</option>
+              <option value="high" {% if task.priority == 'high' %}selected{% endif %}>🔴 High</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" name="due_date" class="form-control" value="{{ task.due_date|date:'Y-m-d' }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assign To</label>
+          <select name="assigned_to" class="form-control">
+            <option value="">Unassigned</option>
+            {% for pm in members %}
+            <option value="{{ pm.user.pk }}" {% if task.assigned_to == pm.user %}selected{% endif %}>
+              {{ pm.user.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>📋 To Do</option>
+            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔵 In Progress</option>
+            <option value="done" {% if task.status == 'done' %}selected{% endif %}>✅ Done</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Sidebar Info -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="margin-bottom:16px;">Task Info</h4>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div class="text-sm" style="color:var(--text-3);margin-bottom:4px;">Assigned To</div>
+          {% if task.assigned_to %}
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar" style="width:28px;height:28px;font-size:0.75rem;">{{ task.assigned_to.username|first|upper }}</div>
+            <span style="font-size:0.875rem;font-weight:500;">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</span>
+          </div>
+          {% else %}
+          <span class="text-muted text-sm">Unassigned</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <div class="text-sm" style="color:var(--text-3);margin-bottom:4px;">Created By</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar" style="width:28px;height:28px;font-size:0.75rem;">{{ task.created_by.username|first|upper }}</div>
+            <span style="font-size:0.875rem;font-weight:500;">{{ task.created_by.username }}</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-sm" style="color:var(--text-3);margin-bottom:4px;">Due Date</div>
+          {% if task.due_date %}
+          <span style="font-size:0.875rem;{% if task.is_overdue %}color:var(--red);{% endif %}">
+            {% if task.is_overdue %}⚠️ {% endif %}{{ task.due_date }}
+          </span>
+          {% else %}
+          <span class="text-muted text-sm">No due date</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <div class="text-sm" style="color:var(--text-3);margin-bottom:4px;">Project</div>
+          <a href="{% url 'project_detail' project.pk %}" style="font-size:0.875rem;">{{ project.name }}</a>
+        </div>
+
+        <div>
+          <div class="text-sm" style="color:var(--text-3);margin-bottom:4px;">Last Updated</div>
+          <span style="font-size:0.875rem;">{{ task.updated_at|date:"M d, Y H:i" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <a href="{% url 'project_detail' project.pk %}" class="btn btn-secondary" style="width:100%;justify-content:center;">
+      ← Back to Project
+    </a>
+  </div>
+
+</div>
+
+{% endwith %}
+{% endblock %}

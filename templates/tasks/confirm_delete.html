@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Delete Task — TaskFlow{% endblock %}
+
+{% block content %}
+{% with user_projects='' %}
+
+<div class="breadcrumb">
+  <a href="{% url 'project_list' %}">Projects</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="{% url 'project_detail' task.project.pk %}">{{ task.project.name }}</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="{% url 'task_detail' task.pk %}">{{ task.title|truncatechars:30 }}</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>Delete</span>
+</div>
+
+<div style="max-width:520px;">
+  <div class="danger-zone">
+    <h3>⚠️ Delete Task</h3>
+    <p style="color:var(--text-2);margin:12px 0 20px;">
+      You are about to permanently delete the task <strong>"{{ task.title }}"</strong>.
+      This action <strong>cannot be undone</strong>.
+    </p>
+    <div style="display:flex;gap:12px;">
+      <a href="{% url 'task_detail' task.pk %}" class="btn btn-secondary">Cancel</a>
+      <form method="post" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Delete Task</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endwith %}
+{% endblock %}

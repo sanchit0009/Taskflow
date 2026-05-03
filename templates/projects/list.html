@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Projects — TaskFlow{% endblock %}
+
+{% block content %}
+{% with user_projects=projects %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Projects</h1>
+    <p class="page-subtitle">{{ projects.count }} project{{ projects.count|pluralize }} you're part of</p>
+  </div>
+  <a href="{% url 'project_create' %}" class="btn btn-primary">+ New Project</a>
+</div>
+
+{% if projects %}
+<div class="card-grid">
+  {% for project in projects %}
+  <a href="{% url 'project_detail' project.pk %}" style="text-decoration:none;">
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+        <h3 style="color:var(--text);">{{ project.name }}</h3>
+        <span class="badge badge-{% if project.creator == user %}admin{% else %}member{% endif %}">
+          {% if project.creator == user %}Admin{% else %}Member{% endif %}
+        </span>
+      </div>
+      {% if project.description %}
+      <p class="text-sm text-muted" style="margin-bottom:16px;line-height:1.6;">{{ project.description|truncatechars:80 }}</p>
+      {% endif %}
+      <div style="display:flex;gap:16px;font-size:0.8rem;color:var(--text-3);">
+        <span>📋 {{ project.tasks.count }} tasks</span>
+        <span>👥 {{ project.projectmember_set.count }} members</span>
+      </div>
+      <div style="margin-top:12px;font-size:0.75rem;color:var(--text-3);">
+        Created by {{ project.creator.username }}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-icon">📁</div>
+    <div class="empty-title">No projects yet</div>
+    <div class="empty-text">Create your first project to start collaborating with your team.</div>
+    <a href="{% url 'project_create' %}" class="btn btn-primary" style="margin-top:20px;">Create Project</a>
+  </div>
+</div>
+{% endif %}
+
+{% endwith %}
+{% endblock %}
