@@ -6,9 +6,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-production-xyz123')
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# ✅ Production safe DEBUG
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+
+# ✅ IMPORTANT: Add your Railway domain here
+ALLOWED_HOSTS = [
+    "web-production-0bf6c.up.railway.app",
+    "localhost",
+    "127.0.0.1"
+]
+
+
+# ✅ FIX FOR CSRF ERROR
+CSRF_TRUSTED_ORIGINS = [
+    "https://web-production-0bf6c.up.railway.app"
+]
 
 
 # ---------------- INSTALLED APPS ----------------
@@ -31,7 +44,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'corsheaders.middleware.CorsMiddleware',
 
@@ -97,7 +110,7 @@ USE_TZ = True
 # ---------------- STATIC FILES ----------------
 STATIC_URL = '/static/'
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'   # Required for deployment
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
