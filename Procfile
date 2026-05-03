@@ -1,2 +1,3 @@
-web: gunicorn taskflow.wsgi --bind 0.0.0.0:$PORT
+web: python manage.py migrate && gunicorn taskflow.wsgi --bind 0.0.0.0:$PORT
 release: python manage.py migrate
+
